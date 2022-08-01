@@ -11,20 +11,29 @@ const { successRes, errorRes } = require("../helpers/respons");
 
 //Add
 const addUser = (req, res) => {
-  const { fName, lName, email, password } = req.body;
-  sql = "INSERT INTO users (f_name,l_name,email,password) VALUES (?,?,?,?)";
-  db.query(sql, [fName, lName, email, password], (error, result, field) => {
+  //const { fName, lName, email, password } = req.body;
+  //sql = "INSERT INTO users (f_name,l_name,email,password) VALUES (?,?,?,?)";
+  const body = req.body;
+  console.log(body);
+  const reqData = {
+    f_name: body?.fName,
+    l_name: body?.lName,
+    email: body?.email,
+    password: body?.password,
+  };
+  sql = `INSERT INTO users SET ?`;
+  db.query(sql, [reqData], (error, result, field) => {
     if (error) {
-      res.status(400).json(errorRes(error, "Something went wrong."));
+      res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       const message = result.insertId
         ? "data added successfully"
-        : "Something went wrong.";
+        : result.sqlMessage;
       const data = result.insertId ? { insertId: result.insertId } : result;
       res.status(200).json(successRes(data, message));
     }
   });
-  console.log(req.body);
+
   //   res.send("ok");
 };
 
@@ -33,7 +42,7 @@ const getAllUser = (req, res) => {
   sql = "SELECT * FROM users";
   db.query(sql, (error, result, field) => {
     if (error) {
-      res.status(400).json(errorRes(error, "Something went wrong."));
+      res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       res.status(200).json(successRes(result, "data get successfully"));
     }
@@ -46,7 +55,7 @@ const getUserById = (req, res) => {
   sql = "SELECT * FROM users WHERE id=?";
   db.query(sql, id, (error, result, field) => {
     if (error) {
-      res.status(400).json(errorRes(error, "Something went wrong."));
+      res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       const message =
         result.length > 0 ? "data get successfully" : "data not found";
@@ -61,7 +70,7 @@ const updateUser = (req, res) => {
   sql = `UPDATE users SET f_name=?, l_name=?  WHERE id=${id}`;
   db.query(sql, [fName, lName], (error, result, field) => {
     if (error) {
-      res.status(400).json(errorRes(error, "Something went wrong."));
+      res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       const message =
         result.affectedRows > 0
@@ -79,7 +88,7 @@ const deleteUser = (req, res) => {
   sql = "DELETE FROM users WHERE id=?";
   db.query(sql, id, (error, result, field) => {
     if (error) {
-      res.status(400).json(errorRes(error, "Something went wrong."));
+      res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       const message = result.affectedRows
         ? "data added successfully"
