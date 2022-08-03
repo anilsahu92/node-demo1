@@ -14,7 +14,16 @@ const errorRes = (data, message, code = 400) => {
     message: message,
   };
 };
+const authError = (data, message, code = 401) => {
+  return {
+    code: code,
+    status: "Auth Error",
+    data: data,
+    message: message,
+  };
+};
 module.exports = {
   successRes,
   errorRes,
+  authError,
 };

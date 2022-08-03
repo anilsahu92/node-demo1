@@ -1,4 +1,3 @@
-const multer = require("multer");
 const db = require("../dbConfig");
 const { successRes, errorRes } = require("../helpers/respons");
 const upload = require("../middlewares/fileUpload");
@@ -11,10 +10,25 @@ const upload = require("../middlewares/fileUpload");
 //   }
 // });
 
+//findOne
+const findOne = async (data) => {
+  let email = data;
+  const sql = `SELECT * FROM users WHERE email=?`;
+  //let getData = null;
+  return new Promise(function (resolve, reject) {
+    db.query(sql, email, (error, result, field) => {
+      return error
+        ? reject(error)
+        : resolve(JSON.parse(JSON.stringify(result)));
+    });
+  });
+};
+
 //Add
 const addUser = (req, res) => {
   //const { fName, lName, email, password } = req.body;
   //sql = "INSERT INTO users (f_name,l_name,email,password) VALUES (?,?,?,?)";
+
   const body = req.body;
   console.log(body);
   const reqData = {
@@ -23,24 +37,49 @@ const addUser = (req, res) => {
     email: body?.email,
     password: body?.password,
   };
-  sql = `INSERT INTO users SET ?`;
-  db.query(sql, [reqData], (error, result, field) => {
-    if (error) {
-      res.status(400).json(errorRes([], error.sqlMessage));
-    } else {
-      const message = result.insertId
-        ? "data added successfully"
-        : result.sqlMessage;
-      const data = result.insertId ? { insertId: result.insertId } : result;
-      res.status(200).json(successRes(data, message));
-    }
-  });
 
-  //   res.send("ok");
+  //cheking  email already exist
+  findOne(body.email)
+    .then((data) => {
+      //console.log("dd", data.length)
+      if (data.length == 0) {
+        //not exist
+        addNew();
+      } else {
+        res.status(201).json(successRes([], "Email id already Exist."));
+      }
+    })
+    .catch((err) =>
+      console.log((err) => {
+        res
+          .status(400)
+          .json(errorRes([], err.sqlMessage || "Something went wrong."));
+      })
+    );
+  //console.log(find);
+  // res.send(find);
+  // res.end();
+  const addNew = () => {
+    sql = `INSERT INTO users SET ?`;
+    db.query(sql, [reqData], (error, result, field) => {
+      if (error) {
+        res.status(400).json(errorRes([], error.sqlMessage));
+      } else {
+        const message = result.insertId
+          ? "data added successfully"
+          : result.sqlMessage;
+        const data = result.insertId ? { insertId: result.insertId } : result;
+        res.status(200).json(successRes(data, message));
+      }
+    });
+  };
 };
 
 //Get All
 const getAllUser = (req, res) => {
+  //console.log(req.headers);
+
+  console.log("Loggedin User", res?.userData);
   sql = "SELECT * FROM users";
   db.query(sql, (error, result, field) => {
     if (error) {
