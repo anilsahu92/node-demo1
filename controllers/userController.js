@@ -99,7 +99,7 @@ const getUserById = (req, res) => {
       res.status(400).json(errorRes([], error.sqlMessage));
     } else {
       const message =
-        result.length > 0 ? "data get successfully" : "data not found";
+        result.length > 0 ? "Data get successfully" : "data not found";
       res.status(200).json(successRes(result, message));
     }
   });
@@ -107,7 +107,8 @@ const getUserById = (req, res) => {
 
 //Get By id
 const updateUser = (req, res) => {
-  const { id, fName, lName } = req.body;
+  const { fName, lName } = req.body;
+  const { id } = req.params;
   sql = `UPDATE users SET f_name=?, l_name=?  WHERE id=${id}`;
   db.query(sql, [fName, lName], (error, result, field) => {
     if (error) {
@@ -117,7 +118,7 @@ const updateUser = (req, res) => {
         result.affectedRows > 0
           ? "data updated successfully"
           : "User not found.";
-      res.status(200).json(successRes(result, message));
+      res.status(200).json(successRes([], message));
     }
   });
   console.log(req.body);

@@ -17,7 +17,7 @@ const errorRes = (data, message, code = 400) => {
 const authError = (data, message, code = 401) => {
   return {
     code: code,
-    status: "Auth Error",
+    status: "Error",
     data: data,
     message: message,
   };
