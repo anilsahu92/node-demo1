@@ -1,141 +1,110 @@
+const mongoose = require("mongoose");
 const db = require("../dbConfig");
+
 const { successRes, errorRes } = require("../helpers/respons");
 const upload = require("../middlewares/fileUpload");
+const userSchema = require("../modals/userModal");
 
-// db.connect((err) => {
-//   if (err) {
-//     console.log(err);
-//   } else {
-//     console.log("DB Connected");
-//   }
-// });
-
-//findOne
-const findOne = async (data) => {
-  let email = data;
-  const sql = `SELECT * FROM users WHERE email=?`;
-  //let getData = null;
-  return new Promise(function (resolve, reject) {
-    db.query(sql, email, (error, result, field) => {
-      return error
-        ? reject(error)
-        : resolve(JSON.parse(JSON.stringify(result)));
-    });
-  });
-};
+require("dotenv").config();
 
 //Add
-const addUser = (req, res) => {
-  //const { fName, lName, email, password } = req.body;
-  //sql = "INSERT INTO users (f_name,l_name,email,password) VALUES (?,?,?,?)";
-
+const addUser = async (req, res) => {
   const body = req.body;
   console.log(body);
-  const reqData = {
+  const addNew = new userSchema({
+    //_id: new mongoose.Schema.Types.ObjectId(),
     f_name: body?.fName,
     l_name: body?.lName,
     email: body?.email,
     password: body?.password,
-  };
+  });
 
-  //cheking  email already exist
-  findOne(body.email)
-    .then((data) => {
-      //console.log("dd", data.length)
-      if (data.length == 0) {
-        //not exist
-        addNew();
-      } else {
-        res.status(201).json(successRes([], "Email id already Exist."));
-      }
-    })
-    .catch((err) =>
-      console.log((err) => {
+  // addNew
+  //   .save()
+  //   .then((doc) => {
+  //     res.status(200).json(successRes([doc], "Data get successfully"));
+  //   })
+  //   .catch((err) => {
+  //     res
+  //       .status(400)
+  //       .json(errorRes(err, err.message || "Something went wrong."));
+  //   });
+
+  const check = await userSchema.findOne({ email: body?.email });
+  console.log(check);
+  if (!check) {
+    addNew
+      .save()
+      .then((doc) => {
+        res.status(200).json(successRes([doc], "Data get successfully"));
+      })
+      .catch((err) => {
         res
           .status(400)
-          .json(errorRes([], err.sqlMessage || "Something went wrong."));
-      })
-    );
-  //console.log(find);
-  // res.send(find);
-  // res.end();
-  const addNew = () => {
-    sql = `INSERT INTO users SET ?`;
-    db.query(sql, [reqData], (error, result, field) => {
-      if (error) {
-        res.status(400).json(errorRes([], error.sqlMessage));
-      } else {
-        const message = result.insertId
-          ? "data added successfully"
-          : result.sqlMessage;
-        const data = result.insertId ? { insertId: result.insertId } : result;
-        res.status(200).json(successRes(data, message));
-      }
-    });
-  };
+          .json(errorRes(err, err.message || "Something went wrong."));
+      });
+  } else {
+    res.status(400).json(errorRes([], "Email alreay exist."));
+  }
 };
 
 //Get All
-const getAllUser = (req, res) => {
+const getAllUser = async (req, res) => {
   //console.log(req.headers);
-
-  console.log("Loggedin User", res?.userData);
-  sql = "SELECT * FROM users";
-  db.query(sql, (error, result, field) => {
-    if (error) {
-      res.status(400).json(errorRes([], error.sqlMessage));
+  //console.log("Loggedin User", res?.userData);
+  userSchema.find({}, (err, doc) => {
+    if (doc) {
+      res.status(200).json(successRes(doc, "data get successfully"));
     } else {
-      res.status(200).json(successRes(result, "data get successfully"));
+      res.status(400).json(errorRes(err, "Something went wrong."));
     }
   });
 };
 
 //Get By id
-const getUserById = (req, res) => {
+const getUserById = async (req, res) => {
   const id = req.params.id;
-  sql = "SELECT * FROM users WHERE id=?";
-  db.query(sql, id, (error, result, field) => {
-    if (error) {
-      res.status(400).json(errorRes([], error.sqlMessage));
+  userSchema.find({ _id: id }, (err, doc) => {
+    if (doc) {
+      res.status(200).json(successRes(doc, "data get successfully"));
     } else {
-      const message =
-        result.length > 0 ? "Data get successfully" : "data not found";
-      res.status(200).json(successRes(result, message));
+      res.status(400).json(errorRes([], "Data not found."));
     }
   });
 };
 
-//Get By id
+//Update User
 const updateUser = (req, res) => {
   const { fName, lName } = req.body;
   const { id } = req.params;
-  sql = `UPDATE users SET f_name=?, l_name=?  WHERE id=${id}`;
-  db.query(sql, [fName, lName], (error, result, field) => {
-    if (error) {
-      res.status(400).json(errorRes([], error.sqlMessage));
-    } else {
-      const message =
-        result.affectedRows > 0
-          ? "data updated successfully"
-          : "User not found.";
-      res.status(200).json(successRes([], message));
+
+  userSchema.updateOne(
+    { _id: id },
+    {
+      $set: {
+        f_name: fName,
+        l_name: lName,
+      },
+    },
+    (err, doc) => {
+      if (doc) {
+        res.status(200).json(successRes([], "Data Updated successfully"));
+      } else {
+        res.status(400).json(errorRes([], "Data not found."));
+      }
     }
-  });
-  console.log(req.body);
+  );
 };
 
-//Get By id
+//Delete By id
 const deleteUser = (req, res) => {
   const id = req.params.id;
-  sql = "DELETE FROM users WHERE id=?";
-  db.query(sql, id, (error, result, field) => {
-    if (error) {
-      res.status(400).json(errorRes([], error.sqlMessage));
+
+  userSchema.deleteOne({ _id: id }, (err, doc) => {
+    if (doc) {
+      res.status(200).json(successRes([], "Data Deleted successfully"));
     } else {
-      const message = result.affectedRows
-        ? "data added successfully"
-        : "User not exist.";
-      res.status(200).json(successRes([], message));
+      res.status(400).json(errorRes([], "Data not found."));
     }
   });
 };

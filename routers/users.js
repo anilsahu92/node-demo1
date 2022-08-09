@@ -17,11 +17,12 @@ const {
 
 var userRouter = express.Router();
 
-userRouter.get("/", authMw, getAllUser);
-userRouter.get("/:id(\\d+)", authMw, getUserById);
-userRouter.delete("/:id", authMw, deleteUser);
-userRouter.post("/add", authMw, addUservalidation, addUser);
-userRouter.put("/:id", authMw, updateUserValidation, updateUser);
-userRouter.post("/profile_upload", authMw, userProfile);
+userRouter.get("/", getAllUser);
+//userRouter.get("/:id(\\d+)", getUserById);
+userRouter.get("/:id", getUserById);
+userRouter.delete("/:id", deleteUser);
+userRouter.post("/add", addUservalidation, addUser);
+userRouter.put("/:id", updateUserValidation, updateUser);
+userRouter.post("/profile_upload", userProfile);
 
 module.exports = userRouter;
