@@ -52,7 +52,7 @@ const addUser = async (req, res) => {
 const getAllUser = async (req, res) => {
   //console.log(req.headers);
   //console.log("Loggedin User", res?.userData);
-  userSchema.find({}, (err, doc) => {
+  userSchema.find({}, { f_name: 1, l_name: 1, email: 1 }, (err, doc) => {
     if (doc) {
       res.status(200).json(successRes(doc, "data get successfully"));
     } else {
